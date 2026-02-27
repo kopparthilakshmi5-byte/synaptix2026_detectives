@@ -1,39 +1,74 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Smart Health Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>🩺 Health Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial;
+            text-align: center;
+            background: #f5f5f5;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .box {
+            background: white;
+            padding: 20px;
+            width: 180px;
+            border-radius: 10px;
+            box-shadow: 0 0 5px gray;
+            font-size: 18px;
+        }
+
+        #popup {
+            display: none;
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border: 2px solid red;
+            box-shadow: 0 0 10px gray;
+        }
+
+        #popup button {
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🧠 Smart Health Monitor</h1>
-        <div class="cards">
-            <div class="card" id="hr-card">
-                <h2>❤️ Heart Rate</h2>
-                <p id="heart_rate">-- bpm</p>
-            </div>
-            <div class="card" id="spo2-card">
-                <h2>🩸 SpO₂</h2>
-                <p id="spo2">-- %</p>
-            </div>
-            <div class="card" id="temp-card">
-                <h2>🌡 Temperature</h2>
-                <p id="temperature">-- °C</p>
-            </div>
-            <div class="card" id="rr-card">
-                <h2>🫁 Respiration Rate</h2>
-                <p id="respiratory_rate">-- bpm</p>
-            </div>
-            <div class="card" id="risk-card">
-                <h2>⚠️ Risk Score</h2>
-                <p id="risk_score">--</p>
-            </div>
-        </div>
 
-        <canvas id="healthChart"></canvas>
+    <h1>🩺 Real-Time Health Monitoring</h1>
+
+    <div class="container">
+        <div class="box">❤️ Heart Rate<br><span id="hr">--</span> bpm</div>
+        <div class="box">🌡️ Temperature<br><span id="temp">--</span> °C</div>
+        <div class="box">🩸 SpO2<br><span id="spo2">--</span> %</div>
+        <div class="box">💨 Respiration<br><span id="rr">--</span> /min</div>
     </div>
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+    <div>
+        <h2>⚠️ Risk Score: <span id="risk">--</span></h2>
+        <div id="alertBox"></div>
+    </div>
+
+    <h2>📊 Risk Graph</h2>
+    <canvas id="riskChart"></canvas>
+
+    <!-- Popup -->
+    <div id="popup">
+        <h3 id="popupTitle"></h3>
+        <p id="popupMessage"></p>
+        <button onclick="closePopup()">Close</button>
+    </div>
+
+    <script src="/static/script.js"></script>
 </body>
 </html>

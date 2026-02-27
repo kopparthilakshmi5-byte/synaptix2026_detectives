@@ -1,57 +1,72 @@
-# app.py
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request
 import numpy as np
-from sklearn.ensemble import IsolationForest
-import joblib
 import os
+import joblib
 
 app = Flask(__name__)
 
-# -------------------
-# Create / Load Model
-# -------------------
 MODEL_PATH = "models/isolation_model.pkl"
-if not os.path.exists("models"):
-    os.makedirs("models")
 
-# Generate synthetic normal data for multi-signal training
-normal_data = np.random.normal(loc=[75,97,36.8,16], scale=[5,1,0.3,2], size=(1000,4))
+def load_model():
+    if os.path.exists(MODEL_PATH):
+        return joblib.load(MODEL_PATH)
+    return None
 
-if not os.path.exists(MODEL_PATH):
-    model = IsolationForest(contamination=0.01, random_state=42)
-    model.fit(normal_data)
-    joblib.dump(model, MODEL_PATH)
-else:
-    model = joblib.load(MODEL_PATH)
+def predict_risk(model, values):
+    arr = np.array(values).reshape(1, -1)
+    score = model.decision_function(arr)[0]
+    return round(max(min(1 - ((score + 0.5)), 1), 0), 2)
 
-# -------------------
-# Simulate Real-time Sensor Data
-# -------------------
-def get_sensor_data():
-    hr = np.random.normal(75, 5)
-    spo2 = np.random.normal(97, 1)
-    temp = np.random.normal(36.8, 0.3)
-    rr = np.random.normal(16, 2)
-    return [round(hr,1), round(spo2,1), round(temp,1), round(rr,1)]
+def generate_alert(data, risk):
+    hr, spo2, temp, rr = data
+    alert = "Normal"
+    message = "Vitals are stable."
+    level = "low"
 
-# -------------------
-# Flask Routes
-# -------------------
+    if risk > 0.7:
+        alert = "Critical"
+        message = "High health risk!"
+        level = "high"
+    elif risk > 0.4:
+        alert = "Warning"
+        message = "Moderate risk."
+        level = "medium"
+
+    if spo2 < 92:
+        alert = "Critical"
+        message = "Low SpO2!"
+        level = "high"
+
+    return alert, message, level
+
 @app.route("/")
-def dashboard():
+def home():
     return render_template("index.html")
 
 @app.route("/api/data")
 def api_data():
-    data = np.array(get_sensor_data()).reshape(1, -1)
-    score = model.decision_function(data)[0]
-    risk = round(max(min(1 - ((score + 0.5)),1),0),2)
+    # Auto generate changing data
+    hr = np.random.normal(75, 8)
+    spo2 = np.random.normal(97, 2)
+    temp = np.random.normal(36.8, 0.5)
+    rr = np.random.normal(16, 3)
+
+    values = [hr, spo2, temp, rr]
+
+    model = load_model()
+    risk = predict_risk(model, values) if model else 0.0
+
+    alert, message, level = generate_alert(values, risk)
+
     return jsonify({
-        "heart_rate": data[0][0],
-        "spo2": data[0][1],
-        "temperature": data[0][2],
-        "respiratory_rate": data[0][3],
-        "risk_score": risk
+        "heart_rate": round(hr,1),
+        "spo2": round(spo2,1),
+        "temperature": round(temp,1),
+        "respiratory_rate": round(rr,1),
+        "risk_score": risk,
+        "alert": alert,
+        "alert_message": message,
+        "alert_level": level
     })
 
 if __name__ == "__main__":

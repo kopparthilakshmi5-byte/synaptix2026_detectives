@@ -1,58 +1,75 @@
-const ctx = document.getElementById('healthChart').getContext('2d');
-
 let labels = [];
 let hrData = [];
-let spo2Data = [];
 let tempData = [];
+let spo2Data = [];
 let rrData = [];
+let chart;
 
-const healthChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-        labels: labels,
-        datasets: [
-            { label: 'HR', data: hrData, borderColor: 'red', fill: false },
-            { label: 'SpO₂', data: spo2Data, borderColor: 'green', fill: false },
-            { label: 'Temp', data: tempData, borderColor: 'orange', fill: false },
-            { label: 'RR', data: rrData, borderColor: 'blue', fill: false }
-        ]
-    },
-    options: {
-        responsive: true,
-        animation: false,
-        scales: {
-            y: { beginAtZero: false }
+function initChart() {
+    const ctx = document.getElementById("riskChart").getContext("2d");
+
+    chart = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: labels,
+            datasets: [
+                { label: "❤️ Heart Rate", data: hrData },
+                { label: "🌡️ Temperature", data: tempData },
+                { label: "🩸 SpO2", data: spo2Data },
+                { label: "💨 Respiration", data: rrData }
+            ]
+        },
+        options: {
+            responsive: true
         }
-    }
-});
-
-function fetchData() {
-    fetch("/api/data")
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('heart_rate').innerText = data.heart_rate + " bpm";
-            document.getElementById('spo2').innerText = data.spo2 + " %";
-            document.getElementById('temperature').innerText = data.temperature + " °C";
-            document.getElementById('respiratory_rate').innerText = data.respiratory_rate + " bpm";
-            document.getElementById('risk_score').innerText = data.risk_score;
-
-            const time = new Date().toLocaleTimeString();
-            labels.push(time);
-            hrData.push(data.heart_rate);
-            spo2Data.push(data.spo2);
-            tempData.push(data.temperature);
-            rrData.push(data.respiratory_rate);
-
-            if(labels.length > 20) {
-                labels.shift();
-                hrData.shift();
-                spo2Data.shift();
-                tempData.shift();
-                rrData.shift();
-            }
-
-            healthChart.update();
-        });
+    });
 }
 
-setInterval(fetchData, 1000);
+function showPopup(title, message) {
+    document.getElementById("popupTitle").innerText = title;
+    document.getElementById("popupMessage").innerText = message;
+    document.getElementById("popup").style.display = "block";
+}
+
+function closePopup() {
+    document.getElementById("popup").style.display = "none";
+}
+
+async function fetchData() {
+    const response = await fetch("/api/data");
+    const data = await response.json();
+
+    document.getElementById("hr").innerText = "❤️ " + data.heart_rate;
+    document.getElementById("spo2").innerText = "🩸 " + data.spo2;
+    document.getElementById("temp").innerText = "🌡️ " + data.temperature;
+    document.getElementById("rr").innerText = "💨 " + data.respiratory_rate;
+    document.getElementById("risk").innerText = "⚠️ " + data.risk_score;
+
+    document.getElementById("alertBox").innerText =
+        data.alert + ": " + data.alert_message;
+
+    if (data.alert_level !== "low") {
+        showPopup(data.alert, data.alert_message);
+    }
+
+    // Multi-line graph update
+    labels.push(new Date().toLocaleTimeString());
+    hrData.push(data.heart_rate);
+    tempData.push(data.temperature);
+    spo2Data.push(data.spo2);
+    rrData.push(data.respiratory_rate);
+
+    if (labels.length > 20) {
+        labels.shift();
+        hrData.shift();
+        tempData.shift();
+        spo2Data.shift();
+        rrData.shift();
+    }
+
+    chart.update();
+}
+
+initChart();
+setInterval(fetchData, 3000);
+fetchData();

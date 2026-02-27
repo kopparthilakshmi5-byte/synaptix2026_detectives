@@ -1,28 +1,40 @@
-import numpy as np
+import os
 import joblib
+import numpy as np
+import pandas as pd
 from sklearn.ensemble import IsolationForest
 
-MODEL_FILE = "model.pkl"
+MODEL_PATH = "models/isolation_model.pkl"
 
-# Generate synthetic normal health data
-# Columns: heart_rate, spo2, temperature
-# Normal ranges: heart_rate ~ 75, spo2 ~ 97, temperature ~ 36.8
-normal_data = np.random.normal(
-    loc=[75, 97, 36.8],      # mean values
-    scale=[10, 1, 0.3],      # standard deviations
-    size=(500, 3)            # 500 samples, 3 features
-)
+def train_model():
+    # Online dataset (no manual download)
+    url = "https://raw.githubusercontent.com/ashishpatel26/IoT-Dataset/master/healthcare-dataset-stroke-data.csv"
+    
+    df = pd.read_csv(url)
 
-# Create IsolationForest model
-model = IsolationForest(
-    contamination=0.05,  # 5% of data treated as anomalies
-    random_state=42
-)
+    # Create simulated wearable-style features
+    df["heart_rate"] = np.random.normal(75, 10, len(df))
+    df["spo2"] = np.random.normal(97, 2, len(df))
+    df["temperature"] = np.random.normal(36.8, 0.5, len(df))
+    df["respiration"] = np.random.normal(16, 3, len(df))
 
-# Train model
-model.fit(normal_data)
+    X = df[["heart_rate", "spo2", "temperature", "respiration"]].values
 
-# Save model to disk
-joblib.dump(model, MODEL_FILE)
+    model = IsolationForest(contamination=0.05, random_state=42)
+    model.fit(X)
 
-print(f"Model trained and saved as {MODEL_FILE}")
+    os.makedirs("models", exist_ok=True)
+    joblib.dump(model, MODEL_PATH)
+
+    return model
+
+def load_model():
+    if os.path.exists(MODEL_PATH):
+        return joblib.load(MODEL_PATH)
+    else:
+        return train_model()
+
+def predict_risk(model, values):
+    arr = np.array(values).reshape(1, -1)
+    score = model.decision_function(arr)[0]
+    return round(max(min(1 - ((score + 0.5)), 1), 0), 2)
