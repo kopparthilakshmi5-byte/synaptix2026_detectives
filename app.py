@@ -1,62 +1,58 @@
-from flask import Flask, jsonify, render_template
-import random
-import pandas as pd
+# app.py
+from flask import Flask, render_template, jsonify
+import numpy as np
+from sklearn.ensemble import IsolationForest
+import joblib
 import os
-from datetime import datetime
 
 app = Flask(__name__)
 
-LOG_FILE = "health_log.csv"
+# -------------------
+# Create / Load Model
+# -------------------
+MODEL_PATH = "models/isolation_model.pkl"
+if not os.path.exists("models"):
+    os.makedirs("models")
 
-# Create CSV if not exists
-if not os.path.exists(LOG_FILE):
-    df = pd.DataFrame(columns=["time", "heart_rate", "spo2", "temperature", "risk"])
-    df.to_csv(LOG_FILE, index=False)
+# Generate synthetic normal data for multi-signal training
+normal_data = np.random.normal(loc=[75,97,36.8,16], scale=[5,1,0.3,2], size=(1000,4))
 
+if not os.path.exists(MODEL_PATH):
+    model = IsolationForest(contamination=0.01, random_state=42)
+    model.fit(normal_data)
+    joblib.dump(model, MODEL_PATH)
+else:
+    model = joblib.load(MODEL_PATH)
 
-# 🧠 AI-Based Risk Detection
-def detect_risk(hr, spo2, temp):
-    risk = "Normal"
+# -------------------
+# Simulate Real-time Sensor Data
+# -------------------
+def get_sensor_data():
+    hr = np.random.normal(75, 5)
+    spo2 = np.random.normal(97, 1)
+    temp = np.random.normal(36.8, 0.3)
+    rr = np.random.normal(16, 2)
+    return [round(hr,1), round(spo2,1), round(temp,1), round(rr,1)]
 
-    if hr < 50 or hr > 120:
-        risk = "High Heart Risk"
-    elif spo2 < 92:
-        risk = "Low Oxygen Risk"
-    elif temp > 38:
-        risk = "Fever Risk"
-
-    return risk
-
-
+# -------------------
+# Flask Routes
+# -------------------
 @app.route("/")
-def home():
+def dashboard():
     return render_template("index.html")
 
-
-@app.route("/api/health")
-def health_data():
-    # Simulated wearable data
-    heart_rate = random.randint(55, 130)
-    spo2 = random.randint(88, 100)
-    temperature = round(random.uniform(36.0, 39.5), 1)
-
-    risk = detect_risk(heart_rate, spo2, temperature)
-
-    # Log Data
-    new_data = {
-        "time": datetime.now().strftime("%H:%M:%S"),
-        "heart_rate": heart_rate,
-        "spo2": spo2,
-        "temperature": temperature,
-        "risk": risk
-    }
-
-    df = pd.read_csv(LOG_FILE)
-    df = pd.concat([df, pd.DataFrame([new_data])])
-    df.to_csv(LOG_FILE, index=False)
-
-    return jsonify(new_data)
-
+@app.route("/api/data")
+def api_data():
+    data = np.array(get_sensor_data()).reshape(1, -1)
+    score = model.decision_function(data)[0]
+    risk = round(max(min(1 - ((score + 0.5)),1),0),2)
+    return jsonify({
+        "heart_rate": data[0][0],
+        "spo2": data[0][1],
+        "temperature": data[0][2],
+        "respiratory_rate": data[0][3],
+        "risk_score": risk
+    })
 
 if __name__ == "__main__":
     app.run(debug=True)

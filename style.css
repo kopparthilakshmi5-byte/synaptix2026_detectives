@@ -1,41 +1,40 @@
 body {
+    font-family: Arial, sans-serif;
+    background-color: #1E1E2F;
+    color: #fff;
     margin: 0;
-    font-family: Arial;
-    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-    color: white;
-    text-align: center;
+    padding: 0;
 }
 
 .container {
-    padding: 30px;
+    width: 90%;
+    margin: auto;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 30px;
 }
 
 .cards {
     display: flex;
-    justify-content: center;
-    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-bottom: 40px;
 }
 
 .card {
-    background: rgba(255,255,255,0.1);
-    padding: 25px;
-    border-radius: 15px;
-    backdrop-filter: blur(8px);
-    width: 150px;
-}
-
-.card p {
-    font-size: 26px;
-}
-
-.risk {
-    margin: 20px;
-    padding: 15px;
-    border-radius: 10px;
-    font-size: 20px;
+    background-color: #2A2A3F;
+    border-radius: 12px;
+    padding: 20px;
+    width: 18%;
+    text-align: center;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
 
 canvas {
-    margin-top: 40px;
-    max-width: 800px;
+    background-color: #2A2A3F;
+    border-radius: 12px;
+    padding: 20px;
 }

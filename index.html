@@ -1,59 +1,39 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Smart Health Dashboard</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-
-<div class="container">
-    <h1>🧠 Smart AI Health Monitor</h1>
-
-    <div class="cards">
-        <div class="card">
-            <h2>❤️ Heart Rate</h2>
-            <p id="hr">--</p>
+    <div class="container">
+        <h1>🧠 Smart Health Monitor</h1>
+        <div class="cards">
+            <div class="card" id="hr-card">
+                <h2>❤️ Heart Rate</h2>
+                <p id="heart_rate">-- bpm</p>
+            </div>
+            <div class="card" id="spo2-card">
+                <h2>🩸 SpO₂</h2>
+                <p id="spo2">-- %</p>
+            </div>
+            <div class="card" id="temp-card">
+                <h2>🌡 Temperature</h2>
+                <p id="temperature">-- °C</p>
+            </div>
+            <div class="card" id="rr-card">
+                <h2>🫁 Respiration Rate</h2>
+                <p id="respiratory_rate">-- bpm</p>
+            </div>
+            <div class="card" id="risk-card">
+                <h2>⚠️ Risk Score</h2>
+                <p id="risk_score">--</p>
+            </div>
         </div>
 
-        <div class="card">
-            <h2>🫁 SpO2</h2>
-            <p id="spo2">--</p>
-        </div>
-
-        <div class="card">
-            <h2>🌡 Temperature</h2>
-            <p id="temp">--</p>
-        </div>
+        <canvas id="healthChart"></canvas>
     </div>
-
-    <div class="risk" id="riskBox">
-        Risk Status: <span id="risk">--</span>
-    </div>
-</div>
-
-<script>
-function fetchData(){
-    fetch("/api/health")
-    .then(res => res.json())
-    .then(data => {
-        document.getElementById("hr").innerText = data.heart_rate + " bpm";
-        document.getElementById("spo2").innerText = data.spo2 + " %";
-        document.getElementById("temp").innerText = data.temperature + " °C";
-        document.getElementById("risk").innerText = data.risk;
-
-        const riskBox = document.getElementById("riskBox");
-
-        if(data.risk !== "Normal"){
-            riskBox.style.background = "#ff4d4d";
-        } else {
-            riskBox.style.background = "#00cc66";
-        }
-    });
-}
-
-setInterval(fetchData, 2000);
-fetchData();
-</script>
-
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
