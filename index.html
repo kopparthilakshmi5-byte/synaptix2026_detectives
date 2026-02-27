@@ -1,19 +1,59 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Wearable Health Monitor</title>
+    <title>Smart Health Dashboard</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
 <div class="container">
-    <h1>Wearable Health Monitoring System</h1>
-    <p>Real-Time Health Risk Prediction</p>
+    <h1>🧠 Smart AI Health Monitor</h1>
 
-    <button onclick="window.open('/dashboard', '_blank')">
-        Open Dashboard
-    </button>
+    <div class="cards">
+        <div class="card">
+            <h2>❤️ Heart Rate</h2>
+            <p id="hr">--</p>
+        </div>
+
+        <div class="card">
+            <h2>🫁 SpO2</h2>
+            <p id="spo2">--</p>
+        </div>
+
+        <div class="card">
+            <h2>🌡 Temperature</h2>
+            <p id="temp">--</p>
+        </div>
+    </div>
+
+    <div class="risk" id="riskBox">
+        Risk Status: <span id="risk">--</span>
+    </div>
 </div>
+
+<script>
+function fetchData(){
+    fetch("/api/health")
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("hr").innerText = data.heart_rate + " bpm";
+        document.getElementById("spo2").innerText = data.spo2 + " %";
+        document.getElementById("temp").innerText = data.temperature + " °C";
+        document.getElementById("risk").innerText = data.risk;
+
+        const riskBox = document.getElementById("riskBox");
+
+        if(data.risk !== "Normal"){
+            riskBox.style.background = "#ff4d4d";
+        } else {
+            riskBox.style.background = "#00cc66";
+        }
+    });
+}
+
+setInterval(fetchData, 2000);
+fetchData();
+</script>
 
 </body>
 </html>
